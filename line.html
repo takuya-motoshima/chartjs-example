@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic line</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <style>
+    .chart-container {
+      height: 300px;
+      overflow: hidden;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-xxl my-md-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-auto">
+        <label for="lineTensionInput" class="form-label">line tension</label>
+        <input type="range" class="form-range" id="lineTensionInput" max="1" min="0" step=".1" value="0">
+      </div>
+      <div class="col-auto">
+        <label for="legendPositionSelect" class="form-label">legend position</label>
+        <select class="form-select" id="legendPositionSelect">
+          <option value="top" selected>top</option>
+          <option value="right">right</option>
+          <option value="left">left</option>
+          <option value="bottom">bottom</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label for="tooltipPositionSelect" class="form-label">Tooltip position</label>
+        <select class="form-select" id="tooltipPositionSelect">
+          <option value="average" selected>average</option>
+          <option value="nearest">nearest</option>
+          <option value="bottom">bottom</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button id="randomizeButton" type="button" class="btn btn-primary">Randomize</button>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
+
+  <script src="node_modules/chart.js/dist/chart.min.js"></script> 
+  <script type="module">
+    import * as utils from './utils.js'
+
+    /**
+     * Request chart data.
+     */
+    function requestData() {
+      const datasets = [];
+      const colors = [
+        'hsl(3,100%,59.4%)',
+        'hsl(35,100%,50%)',
+        'hsl(48,100%,50%)',
+        'hsl(177,100%,39%)',
+        'hsl(189,61.1%,48.4%)',
+        'hsl(199,78.3%,54.9%)',
+        'hsl(211,100%,50%)',
+        'hsl(241,61%,58.8%)',
+        'hsl(280,68%,59.6%)',
+        'hsl(349,100%,58.8%)',
+        'hsl(34,26.8%,50.2%)',
+        'hsl(354,100%,42.2%)',
+        'hsl(16,100%,39.4%)',
+        'hsl(27,100%,34.9%)',
+        'hsl(177,83%,27.6%)',
+        'hsl(189,100%,30%)',
+        'hsl(199,100%,32.2%)',
+        'hsl(223,100%,43.3%)',
+        'hsl(241,51.6%,42.2%)',
+        'hsl(280,43.1%,46.9%)',
+        'hsl(343,86.7%,44.3%)',
+        'hsl(33,29.6%,38.4%)',
+        'hsl(240,1.5%,39.4%)',
+      ];
+      for (let i=0; i<DATASETS_COUNT; i++) {
+        if (i === 0) {
+          datasets.push({
+            label: 'Main',
+            borderColor: 'hsl(135,59%,49%)',
+            backgroundColor: 'hsla(135,59%,49%,.1)',
+            data: utils.randData(DATA_COUNT)
+          });
+        } else {
+          const color = colors[i - 1];
+          datasets.push({
+            label: `Data${i}`,
+            borderColor: color,
+            backgroundColor: color,
+            data: utils.randData(DATA_COUNT)
+          });
+        }
+      }
+      return datasets;
+    }
+
+    /**
+     * Draw a chart.
+     */
+    function drawChart() {
+      // Set canvas size.
+      const myChart = document.querySelector('#myChart');
+      const container = myChart.parentNode;
+      myChart.width = container.clientWidth;
+      myChart.height = container.clientHeight;
+
+      // Request chart data.
+      const datasets = requestData();
+
+      // Number of data on X axis.
+      const dataCount = datasets[0].data.length;
+
+      // Initialize Chart.
+      return new Chart(myChart, {
+        type: 'line',
+        data: {
+          labels: Array.from({length: dataCount}, (_, i) => `Day ${i+1}`),
+          // Below is a case where the X-axis label is written vertically.
+          // labels: Array.from({length: dataCount}, (_, i) => `Day ${i+1}`.split('')),
+          datasets: datasets.map((value, i) => {
+            const pointRadius = 2.5;
+            return {
+              label: value.label,
+              data: value.data,
+              borderWidth: 1.2,
+              borderColor: value.borderColor,
+              backgroundColor: value.backgroundColor,
+              tension: 0,
+              // Fill in the background of the graph for the main data (0th element)
+              fill: i === 0,
+              pointHoverRadius: 4 / 3 * pointRadius,
+              pointRadius,
+              pointBackgroundColor: value.borderColor
+            };
+          })
+        },
+        options: {
+          responsive: true,
+          // pointRadius: 0,
+          interaction: {
+            intersect: false,
+            axis: 'xy',
+            mode: 'index'
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'center',
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                color: '#000',
+                // The main data (0th element) is always displayed, so it should not be possible to switch display by legend.
+                filter: item => item.datasetIndex > 0,
+                font: {
+                  weight: 'bolder'
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: 'Line',
+              color: '#000'
+            },
+            tooltip: {
+              backgroundColor: '#fff',
+              titleColor: '#000',
+              bodyColor: '#000',
+              borderColor: '#000',
+              borderWidth: .2,
+              callbacks: {
+                label: context => {
+                  let label = context.dataset.label || '';
+                  if (label)
+                    label += ': ';
+                  if (context.parsed.y !== null)
+                    label += `${context.parsed.y} unit`;
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Day',
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                }
+              },
+              ticks: {
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                }
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Value',
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                }
+              },
+              ticks: {
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    const DATASETS_COUNT = 7;
+    const DATA_COUNT = 7;
+    const chart = drawChart();
+
+    // Create a custom tooltip positioner to put at the bottom of the chart area
+    Chart.Tooltip.positioners.bottom = items => {
+      const pos = Chart.Tooltip.positioners.average(items);
+      // Happens when nothing is found
+      if (pos === false)
+        return false;
+      return {
+        x: pos.x,
+        y: chart.chartArea.bottom,
+        xAlign: 'center',
+        yAlign: 'bottom',
+      };
+    };
+
+    // Change legend position.
+    document.querySelector('#legendPositionSelect').addEventListener('change', evnt => {
+      chart.options.plugins.legend.position = evnt.currentTarget.value;
+      chart.update();
+    });
+
+    // Change tooltip position.
+    document.querySelector('#tooltipPositionSelect').addEventListener('change', evnt => {
+      chart.options.plugins.tooltip.position = evnt.currentTarget.value;
+      chart.update();
+    });
+
+    // Replace data.
+    document.querySelector('#randomizeButton').addEventListener('click', () => {
+      for (let dataset of chart.data.datasets)
+        dataset.data = utils.randData(DATA_COUNT);
+      chart.update();
+    });
+
+    // Change line tension.
+    document.querySelector('#lineTensionInput').addEventListener('change', evnt => {
+      const value = parseFloat(evnt.currentTarget.value);
+      for (let dataset of chart.data.datasets)
+        dataset.tension = value;
+      chart.update();
+    });
+
+    // When the window is resized, the chart is also resized.
+    window.addEventListener('resize', () => chart.resize());
+  </script>
+</body>
+</html>
