@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Basic bar</title>
+  <title>Bar of chartjs-example</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <style>
     .chart-container {
@@ -25,7 +25,10 @@
   <script src="node_modules/moment/min/moment.min.js"></script>
   <script src="node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js"></script>
   <script type="module">
-    import * as utils from './utils.js'
+    import randData from './utils/randData.js'
+    import selectAllAndUnselectOptionForChartjs from './utils/selectAllAndUnselectOptionForChartjs.js'
+    const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
+    const pieDoughnutLegendClickHandler = Chart.controllers.doughnut.overrides.plugins.legend.onClick;
 
     /**
      * Request chart data.
@@ -60,15 +63,15 @@
       for (let i=0; i<DATASETS_COUNT; i++) {
         // Create data in 30-minute increments from 00:00 to 23:59.
         const data = [];
-        const startTime = moment('00:00', 'HH:mm');
-        const endTime = moment('00:00', 'HH:mm').add(1, 'days');
-        while (startTime < endTime) {
+        const since = moment('00:00', 'HH:mm');
+        const until = moment('00:00', 'HH:mm').add(1, 'days');
+        while (since < until) {
           data.push({
-            x: startTime.format('YYYY-MM-DD HH:mm:ss'),
-            y: utils.randData(1)
+            x: since.format('YYYY-MM-DD HH:mm:ss'),
+            y: randData(1)
           });
           // Add interval of 30 minutes.
-          startTime.add(30, 'minutes');
+          since.add(30, 'minutes');
         }
         if (i === 0) {
           datasets.push({
@@ -99,12 +102,13 @@
 
       // Request chart data.
       const datasets = requestData();
+      // console.log(JSON.stringify(datasets, null, 2));
 
-      // Initialize Chart.
-      return new Chart(myChart, {
+      // Chart Configuration.
+      const config = {
         type: 'bar',
         data: {
-          // labels: ['2022-04-27', '2022-04-27', '2022-04-27'],
+          // labels: ['00:00', '00:30', '01:00'],
           datasets
         },
         options: {
@@ -117,8 +121,8 @@
                 boxWidth: 10,
                 boxHeight: 10,
                 color: '#000',
-                // The main data (0th element) is always displayed, so it should not be possible to switch display by legend.
-                filter: item => item.datasetIndex > 0,
+                // // The main data (0th element) is always displayed, so it should not be possible to switch display by legend.
+                // filter: item => item.datasetIndex > 0,
                 font: {
                   weight: 'bolder'
                 }
@@ -151,8 +155,8 @@
             x: {
               type: 'time',
               display: true,
-              min: '2022-04-27 00:00:00',
-              max: '2022-04-27 23:59:59',
+              min: '00:00:00',
+              max: '23:59:59',
               time: {
                 // unit: 'hour',
                 // stepSize: 1,
@@ -162,7 +166,7 @@
                   'minute': 'HH:mm',
                   'hour': 'HH:mm'
                 },
-                tooltipFormat: 'YYYY-MM-DD HH:mm'
+                tooltipFormat: 'HH:mm'
               },
               ticks: {
                 color: '#000',
@@ -193,15 +197,23 @@
                 color: '#000',
                 font: {
                   weight: 'bolder'
-                }
+                },
+                stepSize: 1,
+                callback: value => `${value} unit`,
               }
             }
           }
         }
-      });
+      };
+
+      // Added label to switch display of graphs.
+      selectAllAndUnselectOptionForChartjs(config, [0]);
+
+      // Initialize Chart.
+      return new Chart(myChart, config);
     }
 
-    const DATASETS_COUNT = 10;
+    const DATASETS_COUNT = 3;
     const chart = drawChart();
   </script>
 </body>
