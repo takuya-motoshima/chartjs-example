@@ -2,11 +2,7 @@
 Chart.js example code.
 
 ## Demo
-### Line Chart
-<img src="docs/img/demos/line.png">
-
-### Bar Chart
-<img src="docs/img/demos/bar.png">
+[https://takuya-motoshima.github.io/chartjs-example](https://takuya-motoshima.github.io/chartjs-example)
 
 ## Author
 **Takuya Motoshima**

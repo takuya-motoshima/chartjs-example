@@ -4,8 +4,220 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bar Chart Demo - chartjs-example</title>
+  <title>Bar of chartjs-example</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <style>
+    .chart-container {
+      height: 300px;
+      overflow: hidden;
+      margin: 20px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container-xxl my-md-4">
+    <div class="chart-container">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.0/chartjs-adapter-moment.min.js"></script>
+  <!-- <script src="node_modules/chart.js/dist/chart.min.js"></script>  -->
+  <!-- <script src="node_modules/moment/min/moment.min.js"></script> -->
+  <!-- <script src="node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js"></script> -->
+  <script type="module">
+    import randData from './utils/randData.js'
+    import selectAllAndUnselectOptionForChartjs from './utils/selectAllAndUnselectOptionForChartjs.js'
+    const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
+    const pieDoughnutLegendClickHandler = Chart.controllers.doughnut.overrides.plugins.legend.onClick;
+
+    /**
+     * Request chart data.
+     */
+    function requestData() {
+      const datasets = [];
+      const colors = [
+        'hsl(3,100%,59.4%)',
+        'hsl(35,100%,50%)',
+        'hsl(48,100%,50%)',
+        'hsl(177,100%,39%)',
+        'hsl(189,61.1%,48.4%)',
+        'hsl(199,78.3%,54.9%)',
+        'hsl(211,100%,50%)',
+        'hsl(241,61%,58.8%)',
+        'hsl(280,68%,59.6%)',
+        'hsl(349,100%,58.8%)',
+        'hsl(34,26.8%,50.2%)',
+        'hsl(354,100%,42.2%)',
+        'hsl(16,100%,39.4%)',
+        'hsl(27,100%,34.9%)',
+        'hsl(177,83%,27.6%)',
+        'hsl(189,100%,30%)',
+        'hsl(199,100%,32.2%)',
+        'hsl(223,100%,43.3%)',
+        'hsl(241,51.6%,42.2%)',
+        'hsl(280,43.1%,46.9%)',
+        'hsl(343,86.7%,44.3%)',
+        'hsl(33,29.6%,38.4%)',
+        'hsl(240,1.5%,39.4%)',
+      ];
+      for (let i=0; i<DATASETS_COUNT; i++) {
+        // Create data in 30-minute increments from 00:00 to 23:59.
+        const data = [];
+        const since = moment('00:00', 'HH:mm');
+        const until = moment('00:00', 'HH:mm').add(1, 'days');
+        while (since < until) {
+          data.push({
+            x: since.format('YYYY-MM-DD HH:mm:ss'),
+            y: randData(1)
+          });
+          // Add interval of 30 minutes.
+          since.add(30, 'minutes');
+        }
+        if (i === 0) {
+          datasets.push({
+            label: 'Main',
+            backgroundColor: 'hsl(135,59%,49%)',
+            data
+          });
+        } else {
+          datasets.push({
+            label: `Data${i}`,
+            backgroundColor: colors[i - 1],
+            data
+          });
+        }
+      }
+      return datasets;
+    }
+
+    /**
+     * Draw a chart.
+     */
+    function drawChart() {
+      // Set canvas size.
+      const myChart = document.querySelector('#myChart');
+      const container = myChart.parentNode;
+      myChart.width = container.clientWidth;
+      myChart.height = container.clientHeight;
+
+      // Request chart data.
+      const datasets = requestData();
+      // console.log(JSON.stringify(datasets, null, 2));
+
+      // Chart Configuration.
+      const config = {
+        type: 'bar',
+        data: {
+          // labels: ['00:00', '00:30', '01:00'],
+          datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'center',
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                color: '#000',
+                // // The main data (0th element) is always displayed, so it should not be possible to switch display by legend.
+                // filter: item => item.datasetIndex > 0,
+                font: {
+                  weight: 'bolder'
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: 'Bar',
+              color: '#000'
+            },
+            tooltip: {
+              backgroundColor: '#fff',
+              titleColor: '#000',
+              bodyColor: '#000',
+              borderColor: '#000',
+              borderWidth: .2,
+              callbacks: {
+                label: context => {
+                  let label = context.dataset.label || '';
+                  if (label)
+                    label += ': ';
+                  if (context.parsed.y !== null)
+                    label += `${context.parsed.y} unit`;
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              display: true,
+              min: '00:00:00',
+              max: '23:59:59',
+              time: {
+                // unit: 'hour',
+                // stepSize: 1,
+                unit: 'minute',
+                stepSize: 30,
+                displayFormats: {
+                  'minute': 'HH:mm',
+                  'hour': 'HH:mm'
+                },
+                tooltipFormat: 'HH:mm'
+              },
+              ticks: {
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                }
+              },
+              title: {
+                display: true,
+                text: 'Time',
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                }
+              },
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Value',
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                }
+              },
+              ticks: {
+                color: '#000',
+                font: {
+                  weight: 'bolder'
+                },
+                stepSize: 1,
+                callback: value => `${value} unit`,
+              }
+            }
+          }
+        }
+      };
+
+      // Added label to switch display of graphs.
+      selectAllAndUnselectOptionForChartjs(config, {ignoreDatasetIndexes : 0});
+
+      // Initialize Chart.
+      return new Chart(myChart, config);
+    }
+
+    const DATASETS_COUNT = 3;
+    const chart = drawChart();
+  </script>
 </body>
 </html>
