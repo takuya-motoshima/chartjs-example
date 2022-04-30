@@ -1,10 +1,21 @@
 /**
  * Add a label to toggle the display of multiple data sets.
- * @params {number[]} ignoreDatasetIndexes Data set index to ignore display switching.
+ *
+ * @params {object}   config                        Chart JS Configuration.
+ * @params {number[]} options,ignoreDatasetIndexes  Data set index to ignore display switching.
  */
-export default (config, ignoreDatasetIndexes = undefined) => {
+export default (config, options) => {
   const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
   const pieDoughnutLegendClickHandler = Chart.controllers.doughnut.overrides.plugins.legend.onClick;
+
+  // Initialize options.
+  options = Object.assign({
+    ignoreDatasetIndexes: undefined
+  }, options);
+
+  // Convert ignoreDatasetIndexes to array.
+  if (options.ignoreDatasetIndexes != null && !Array.isArray(options.ignoreDatasetIndexes))
+    options.ignoreDatasetIndexes = [options.ignoreDatasetIndexes];
 
   // Toggle the display of graphs other than the main data (first element).
   config.options.plugins.legend.onClick = (evnt, legendItem, legend) => {
@@ -13,7 +24,7 @@ export default (config, ignoreDatasetIndexes = undefined) => {
       if (typeof legend.hideAll === 'undefined')
         legend.hideAll = false;
       for (let [i, dataset] of Object.entries(legend.chart.data.datasets)) {
-        if (ignoreDatasetIndexes && ignoreDatasetIndexes.indexOf(parseInt(i, 10)) !== -1)
+        if (options.ignoreDatasetIndexes && options.ignoreDatasetIndexes.indexOf(parseInt(i, 10)) !== -1)
           continue;
         // Toggle display.
         legend.chart.setDatasetVisibility(i, legend.hideAll)
@@ -23,16 +34,13 @@ export default (config, ignoreDatasetIndexes = undefined) => {
       return;
     }
     // When the label for each dataset is clicked.
-    console.log(`legend.chart.config.type=${legend.chart.config.type}`);
     if (legend.chart.config.type === 'pie' || legend.chart.config.type === 'doughnut')
       pieDoughnutLegendClickHandler(evnt, legendItem, legend)
     else
       defaultLegendClickHandler(evnt, legendItem, legend);
 
     // Get the display status of each data set.
-    const allLegendItemsState = legend.chart.data.datasets.map((e, i) => {
-      return legend.chart.getDatasetMeta(i).hidden;
-    });
+    const allLegendItemsState = legend.chart.data.datasets.map((_, i) => legend.chart.getDatasetMeta(i).hidden);
     if (allLegendItemsState.every(el => !el)) {
       legend.hideAll = false;
       legend.chart.update();
@@ -53,7 +61,7 @@ export default (config, ignoreDatasetIndexes = undefined) => {
 
     // Labels for each dataset.
     for (let [i, meta] of Object.entries(chart._getSortedDatasetMetas())) {
-      if (ignoreDatasetIndexes && ignoreDatasetIndexes.indexOf(parseInt(i, 10)) !== -1)
+      if (options.ignoreDatasetIndexes && options.ignoreDatasetIndexes.indexOf(parseInt(i, 10)) !== -1)
         continue;
       const style = meta.controller.getStyle(usePointStyle ? 0 : undefined);
       legendItems.push({

@@ -207,7 +207,7 @@
       };
 
       // Added label to switch display of graphs.
-      selectAllAndUnselectOptionForChartjs(config, [0]);
+      selectAllAndUnselectOptionForChartjs(config, {ignoreDatasetIndexes : 0});
 
       // Initialize Chart.
       return new Chart(myChart, config);
@@ -215,6 +215,14 @@
 
     const DATASETS_COUNT = 3;
     const chart = drawChart();
+    globalThis.chart = chart;
+
+
+    // for (let [i, dataset] of Object.entries(chart.data.datasets)) {
+    //   const meta = this.eval_chart.getDatasetMeta(index);
+    //   debugger;
+    // }
+    // chart.update();
   </script>
 </body>
 </html>
