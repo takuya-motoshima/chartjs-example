@@ -10,7 +10,9 @@ export default (config, options) => {
 
   // Initialize options.
   options = Object.assign({
-    ignoreDatasetIndexes: undefined
+    ignoreDatasetIndexes: undefined,
+    showText: 'show all',
+    hideText: 'hide all'
   }, options);
 
   // Convert ignoreDatasetIndexes to array.
@@ -83,7 +85,7 @@ export default (config, options) => {
 
     // Label to toggle display.
     legendItems.push({
-      text: (!chart.legend.hideAll || typeof chart.legend.hideAll === 'undefined') ? 'hide all datasets' : 'show all datasets',
+      text: (!chart.legend.hideAll || typeof chart.legend.hideAll === 'undefined') ? options.hideText : options.showText,
       fontColor: color,
       fillStyle: '#000', // Box color
       strokeStyle: '#000', // LineCollor around box,
