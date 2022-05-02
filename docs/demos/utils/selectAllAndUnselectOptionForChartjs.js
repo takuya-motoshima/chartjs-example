@@ -15,6 +15,9 @@ export default (config, options) => {
     hideText: 'hide all'
   }, options);
 
+  // Chart's initialized flags.
+  let initialized = false;
+
   // Convert ignoreDatasetIndexes to array.
   if (options.ignoreDatasetIndexes != null && !Array.isArray(options.ignoreDatasetIndexes))
     options.ignoreDatasetIndexes = [options.ignoreDatasetIndexes];
@@ -51,7 +54,6 @@ export default (config, options) => {
       legend.chart.update();
     }
   };
-
 
   // Add labels to show and hide data sets other than the main data set.
   config.options.plugins.legend.labels.generateLabels = chart => {
@@ -94,4 +96,9 @@ export default (config, options) => {
     });
     return legendItems;
   };
+
+  // Turn on the initialized flag.
+  config.plugins = [{
+    afterRender: () => initialized = true
+  }];
 }
