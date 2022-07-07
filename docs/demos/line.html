@@ -89,7 +89,7 @@
           datasets.push({
             label: 'Main',
             borderColor: 'hsl(135,59%,49%)',
-            backgroundColor: 'hsla(135,59%,49%,.1)',
+            backgroundColor: 'hsl(135,59%,49%)',
             data: randData(DATA_COUNT)
           });
         } else {
@@ -135,7 +135,18 @@
               data: value.data,
               borderWidth: 1.2,
               borderColor: value.borderColor,
-              backgroundColor: value.backgroundColor,
+              backgroundColor: (() => {
+                if (i === 0) {
+                  // Main line fill color gradient.
+                  const gradient = myChart.getContext('2d').createLinearGradient(0, 0, 0, myChart.height);
+                  gradient.addColorStop(0, value.backgroundColor);
+                  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                  return gradient;
+                } else {
+                  return value.backgroundColor;
+                }
+              })(),
+              // backgroundColor: value.backgroundColor,
               tension: 0,
               // Fill in the background of the graph for the main data (0th element)
               fill: i === 0,
@@ -207,7 +218,9 @@
                 font: {
                   weight: 'bolder'
                 }
-              }
+              },
+              // The vertical axis is hidden.
+              grid: {display: false}
             },
             y: {
               display: true,
@@ -225,6 +238,11 @@
                 font: {
                   weight: 'bolder'
                 }
+              },
+              // Dot the horizontal axis.
+              grid: {
+                drawBorder: false,
+                borderDash: [3, 3]
               }
             }
           }

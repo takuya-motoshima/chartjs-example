@@ -185,6 +185,8 @@
                   weight: 'bolder'
                 }
               },
+              // The vertical axis is hidden.
+              grid: {display: false}
             },
             y: {
               display: true,
@@ -203,6 +205,11 @@
                 },
                 stepSize: 1,
                 callback: value => `${value} unit`,
+              },
+              // Dot the horizontal axis.
+              grid: {
+                drawBorder: false,
+                borderDash: [3, 3]
               }
             }
           }
