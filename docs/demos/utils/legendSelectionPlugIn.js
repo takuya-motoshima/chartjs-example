@@ -123,6 +123,7 @@ export default (config, options) => {
     return legendItems;
   };
 
+  // When all data is hidden in the first view.
   if (!options.showAtFirst) {
     config.plugins = [{
       beforeRender: chart => {
