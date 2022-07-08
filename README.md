@@ -4,6 +4,11 @@ Chart.js example code.
 ## Demo
 [https://takuya-motoshima.github.io/chartjs-example](https://takuya-motoshima.github.io/chartjs-example)
 
+## Other
+```js
+const found = chart.legend.legendItems.find(legend => legend.hasOwnProperty('isAll'));
+```
+
 ## Author
 **Takuya Motoshima**
 

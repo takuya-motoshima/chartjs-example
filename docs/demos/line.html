@@ -18,24 +18,24 @@
   <div class="container-xxl my-md-4">
     <div class="row g-3 align-items-center">
       <div class="col-auto">
-        <label for="lineTensionInput" class="form-label">line tension</label>
+        <label for="lineTensionInput" class="form-label">Line tension</label>
         <input type="range" class="form-range" id="lineTensionInput" max="1" min="0" step=".1" value="0">
       </div>
       <div class="col-auto">
         <label for="legendPositionSelect" class="form-label">legend position</label>
         <select class="form-select" id="legendPositionSelect">
-          <option value="top" selected>top</option>
-          <option value="right">right</option>
-          <option value="left">left</option>
-          <option value="bottom">bottom</option>
+          <option value="top" selected>Top</option>
+          <option value="right">Right</option>
+          <option value="left">Left</option>
+          <option value="bottom">Bottom</option>
         </select>
       </div>
       <div class="col-auto">
         <label for="tooltipPositionSelect" class="form-label">Tooltip position</label>
         <select class="form-select" id="tooltipPositionSelect">
-          <option value="average" selected>average</option>
-          <option value="nearest">nearest</option>
-          <option value="bottom">bottom</option>
+          <option value="average" selected>Average</option>
+          <option value="nearest">Nearest</option>
+          <option value="bottom">Bottom</option>
         </select>
       </div>
       <div class="col-auto">
@@ -52,7 +52,7 @@
   <!-- <script src="node_modules/chart.js/dist/chart.min.js"></script>  -->
   <script type="module">
     import randData from './utils/randData.js'
-    import selectAllAndUnselectOptionForChartjs from './utils/selectAllAndUnselectOptionForChartjs.js'
+    import legendSelectionPlugIn from './utils/legendSelectionPlugIn.js'
 
     /**
      * Request chart data.
@@ -175,7 +175,8 @@
                 // // The main data (0th element) is always displayed, so it should not be possible to switch display by legend.
                 // filter: item => item.datasetIndex > 0,
                 font: {
-                  weight: 'bolder'
+                  weight: 'bolder',
+                  size: 16
                 }
               }
             },
@@ -206,12 +207,12 @@
             x: {
               display: true,
               title: {
-                display: true,
-                text: 'Day',
-                color: '#000',
-                font: {
-                  weight: 'bolder'
-                }
+                display: false,
+                // text: 'Day',
+                // color: '#000',
+                // font: {
+                //   weight: 'bolder'
+                // }
               },
               ticks: {
                 color: '#000',
@@ -225,12 +226,12 @@
             y: {
               display: true,
               title: {
-                display: true,
-                text: 'Value',
-                color: '#000',
-                font: {
-                  weight: 'bolder'
-                }
+                display: false,
+                // text: 'Value',
+                // color: '#000',
+                // font: {
+                //   weight: 'bolder'
+                // }
               },
               ticks: {
                 color: '#000',
@@ -250,9 +251,10 @@
       };
 
       // Added label to switch display of graphs.
-      selectAllAndUnselectOptionForChartjs(config, {ignoreDatasetIndexes : 0});
-
-      console.log(config);
+      legendSelectionPlugIn(config, {
+        ignore : 0,
+        showAtFirst: false
+      });
 
       // Initialize Chart.
       return new Chart(myChart, config);
@@ -305,6 +307,10 @@
 
     // When the window is resized, the chart is also resized.
     window.addEventListener('resize', () => chart.resize());
+
+    // For debugging, make the chart object accessible in the console.
+    window.chart = chart;
+    // toggleItems(chart, false, [0]);
   </script>
 </body>
 </html>

@@ -29,9 +29,7 @@
   <!-- <script src="node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js"></script> -->
   <script type="module">
     import randData from './utils/randData.js'
-    import selectAllAndUnselectOptionForChartjs from './utils/selectAllAndUnselectOptionForChartjs.js'
-    const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
-    const pieDoughnutLegendClickHandler = Chart.controllers.doughnut.overrides.plugins.legend.onClick;
+    import legendSelectionPlugIn from './utils/legendSelectionPlugIn.js'
 
     /**
      * Request chart data.
@@ -105,7 +103,6 @@
 
       // Request chart data.
       const datasets = requestData();
-      // console.log(JSON.stringify(datasets, null, 2));
 
       // Chart Configuration.
       const config = {
@@ -127,7 +124,8 @@
                 // // The main data (0th element) is always displayed, so it should not be possible to switch display by legend.
                 // filter: item => item.datasetIndex > 0,
                 font: {
-                  weight: 'bolder'
+                  weight: 'bolder',
+                  size: 16
                 }
               }
             },
@@ -178,12 +176,12 @@
                 }
               },
               title: {
-                display: true,
-                text: 'Time',
-                color: '#000',
-                font: {
-                  weight: 'bolder'
-                }
+                display: false,
+                // text: 'Time',
+                // color: '#000',
+                // font: {
+                //   weight: 'bolder'
+                // }
               },
               // The vertical axis is hidden.
               grid: {display: false}
@@ -191,12 +189,12 @@
             y: {
               display: true,
               title: {
-                display: true,
-                text: 'Value',
-                color: '#000',
-                font: {
-                  weight: 'bolder'
-                }
+                display: false,
+                // text: 'Value',
+                // color: '#000',
+                // font: {
+                //   weight: 'bolder'
+                // }
               },
               ticks: {
                 color: '#000',
@@ -217,14 +215,16 @@
       };
 
       // Added label to switch display of graphs.
-      selectAllAndUnselectOptionForChartjs(config, {ignoreDatasetIndexes : 0});
+      legendSelectionPlugIn(config, {ignore : 0});
 
       // Initialize Chart.
       return new Chart(myChart, config);
     }
-
     const DATASETS_COUNT = 3;
     const chart = drawChart();
+
+    // For debugging, make the chart object accessible in the console.
+    window.chart = chart;
   </script>
 </body>
 </html>
