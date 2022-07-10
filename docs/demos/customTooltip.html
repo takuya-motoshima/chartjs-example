@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Line Chart</title>
+  <title>Custom Tooltip</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <style>
     .chart-container {
@@ -12,6 +12,61 @@
       overflow: hidden;
       margin: 20px;
     }
+
+    .chart-tooltip-title {
+      font-size: 1.075rem;
+      font-weight: bolder;
+    }
+
+    .chart-tooltip-body {
+      display: flex;
+      align-items: center;
+      padding-top: 0.5rem;
+    }
+
+      .chart-tooltip-thumbnail {
+        width: 100px;
+        object-fit: contain;
+        margin-right: 1.25rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+      }
+
+      .chart-tooltip-data {
+        display: flex;
+        flex-direction: column;
+        flex: 1 auto;
+        min-width: 0;
+      }
+
+        .chart-tooltip-data-item {
+          display: flex;
+          align-items: center;
+          font-weight: 500;
+        }
+          
+          .chart-tooltip-data-item-bullet {
+            display: inline-block;
+            flex-shrink: 0;
+            border-radius: 0.475rem;
+            margin-right: 0.75rem;
+            height: 3px;
+            width: 8px;
+          }
+
+          .chart-tooltip-data-item-label {
+            margin-right: 1rem;
+            flex-grow: 1;
+            font-weight: 500;
+            color: #7e8299;
+            /* color: #a1a5b7; */
+          }
+
+          .chart-tooltip-data-item-stats {
+            color: #5e6278;
+            font-weight: 700;
+
+          }
   </style>
 </head>
 <body>
@@ -85,12 +140,14 @@
         'hsl(240,1.5%,39.4%)',
       ];
       for (let i=0; i<DATASETS_COUNT; i++) {
+        const thumbnailUrl = `img/thumbnail${i+1}.jpg`;
         if (i === 0) {
           datasets.push({
             label: 'Main',
             borderColor: 'hsl(135,59%,49%)',
             backgroundColor: 'hsl(135,59%,49%)',
-            data: randData(DATA_COUNT)
+            data: randData(DATA_COUNT),
+            thumbnailUrl
           });
         } else {
           const color = colors[i - 1];
@@ -98,11 +155,40 @@
             label: `Data${i}`,
             borderColor: color,
             backgroundColor: color,
-            data: randData(DATA_COUNT)
+            data: randData(DATA_COUNT),
+            thumbnailUrl
           });
         }
       }
       return datasets;
+    }
+
+    /**
+     * Get tooltip element.
+     */
+    function getTooltip(chart) {
+      let tooltipEl = chart.canvas.parentNode.querySelector('div');
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.style.background = '#fff';
+        tooltipEl.style.borderRadius = '3px';
+        tooltipEl.style.boxShadow = '0 0.25rem 0.5rem rgba(0, 0, 0, 0.05)';
+        tooltipEl.style.color = '#000';
+        tooltipEl.style.opacity = 1;
+        tooltipEl.style.pointerEvents = 'none';
+        tooltipEl.style.position = 'absolute';
+        tooltipEl.style.transform = 'translate(-50%, 0)';
+        tooltipEl.style.transition = 'all .1s ease';
+        tooltipEl.insertAdjacentHTML('beforeend', 
+          `<span class="chart-tooltip-title"></span>
+          <div class="chart-tooltip-body">
+            <img src="img.jpg" class="chart-tooltip-thumbnail">
+            <div class="chart-tooltip-data"></div>
+            <table style="margin: 0;"></table>
+          </div>`);
+        chart.canvas.parentNode.appendChild(tooltipEl);
+      }
+      return tooltipEl;
     }
 
     /**
@@ -152,7 +238,8 @@
               fill: i === 0,
               pointHoverRadius: 4 / 3 * pointRadius,
               pointRadius,
-              pointBackgroundColor: dataset.borderColor
+              pointBackgroundColor: dataset.borderColor,
+              thumbnailUrl: dataset.thumbnailUrl
             };
           })
         },
@@ -186,20 +273,70 @@
               color: '#000'
             },
             tooltip: {
-              backgroundColor: '#fff',
-              titleColor: '#000',
-              bodyColor: '#000',
-              borderColor: '#000',
-              borderWidth: .2,
-              callbacks: {
-                label: context => {
-                  let label = context.dataset.label || '';
-                  if (label)
-                    label += ': ';
-                  if (context.parsed.y !== null)
-                    label += `${context.parsed.y} unit`;
-                  return label;
+              enabled: false,
+              position: 'nearest',
+              external: context => {
+                // Tooltip Element
+                const {chart, tooltip} = context;
+                const tooltipEl = getTooltip(chart);
+
+                // Hide if no tooltip
+                if (tooltip.opacity === 0) {
+                  tooltipEl.style.opacity = 0;
+                  return;
                 }
+
+                // Set Text
+                if (tooltip.body) {
+                  // Tooltip Title.
+                  const titleEl = tooltipEl.querySelector('.chart-tooltip-title');
+                  titleEl.textContent = tooltip.title[0];
+
+                  // Thumbnail image.
+                  // debugger;
+                  const dataPoint = tooltip.dataPoints[0];
+                  const imgEl = tooltipEl.querySelector('.chart-tooltip-thumbnail')
+                  imgEl.src = chart.data.datasets[dataPoint.dataIndex].thumbnailUrl;
+
+                  // Tooltip Label.
+                  const labelsEl = tooltipEl.querySelector('.chart-tooltip-data');
+                  labelsEl.innerHTML = '';
+                  const bodyLines = tooltip.body.map(b => b.lines);
+                  for (let [i, body] of Object.entries(bodyLines)) {
+                    // Split body into labels and values.
+                    let label = body[0];
+                    let value = '';
+                    const matched = label.match(/(..*):\s*(..*)$/);
+                    if (matched) {
+                      label = matched[1];
+                      value = matched[2];
+                    }
+                    
+                    const colors = tooltip.labelColors[i];
+                    labelsEl.insertAdjacentHTML('beforeend', 
+                      `<div class="chart-tooltip-data-item">
+                        <!--begin::Bullet-->
+                        <div class="chart-tooltip-data-item-bullet" style="background-color: ${colors.backgroundColor};"></div>
+                        <!--end::Bullet-->
+
+                        <!--begin::Label-->
+                        <div class="chart-tooltip-data-item-label">${label}</div>
+                        <!--end::Label-->
+
+                        <!--begin::Stats-->
+                        <div class="chart-tooltip-data-item-stats">${value} units</div>
+                        <!--end::Stats-->
+                      </div>`);
+                  }
+                }
+
+                // Display, position, and set styles for font.
+                const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
+                tooltipEl.style.opacity = 1;
+                tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+                tooltipEl.style.top = positionY + tooltip.caretY + 'px';
+                tooltipEl.style.font = tooltip.options.bodyFont.string;
+                tooltipEl.style.padding = tooltip.options.padding + 'px ' + tooltip.options.padding + 'px';
               }
             }
           },
